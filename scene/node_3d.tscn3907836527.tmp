@@ -1,0 +1,13 @@
+[gd_scene format=3 uid="uid://bvqb8m07gcwy4"]
+
+[ext_resource type="Script" uid="uid://b514hdt26hval" path="res://addons/2026_03_23_gdp_git_terminal_builder/script/sleep_fun.gd" id="1_21kjh"]
+[ext_resource type="Script" uid="uid://beyt6evxb515v" path="res://addons/2026_03_23_gdp_git_terminal_builder/script/git_terminal_command_runner_exe.gd" id="2_5u6yk"]
+
+[node name="Node3D" type="Node3D" unique_id=1761697527]
+
+[node name="Node" type="Node" parent="." unique_id=204665585 node_paths=PackedStringArray("runner")]
+script = ExtResource("1_21kjh")
+runner = NodePath("../CmdRunner")
+
+[node name="CmdRunner" type="Node" parent="." unique_id=90833232]
+script = ExtResource("2_5u6yk")
