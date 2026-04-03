@@ -2,6 +2,28 @@ class_name GitTerminalCommandBuilder
 extends Node
 
 
+
+static func append_git_add_commit_pull(out_commands: Array[String], commit_message: String) -> void:
+	append_git_add_all_files(out_commands)
+	append_git_commit(out_commands, commit_message)
+	append_git_pull(out_commands)
+
+
+static func append_git_pull_push_with_add_and_commit_date_comment(out_commands: Array[String]) -> void:
+	var d = Time.get_date_dict_from_system()
+	var t = Time.get_time_dict_from_system()
+	var date_comment = "SAVE:" + str(d.year) + "_" + str(d.month) + "_" + str(d.day) + "_" + str(t.hour) + "_" + str(t.minute) + "_" + str(t.second)
+	
+	append_git_pull_push_with_add_and_commit(out_commands, date_comment)
+
+static func append_git_pull_push_with_add_and_commit(out_commands: Array[String], commit_message: String) -> void:
+	append_git_add_all_files(out_commands)
+	append_git_commit(out_commands, commit_message)
+	append_git_pull(out_commands)
+	append_git_add_all_files(out_commands)
+	append_git_commit(out_commands, "Merge: " + commit_message)
+	append_git_push(out_commands)
+
 static func append_git_init(out_commands: Array[String]) -> void:
 	out_commands.append("git init")
 

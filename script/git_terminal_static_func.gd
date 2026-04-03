@@ -2,6 +2,38 @@ class_name GitTerminalStaticFunc
 extends Node
 
 
+static func get_platform_info() -> String:
+	var name = OS.get_name()
+	match name:
+		"Windows":
+			return "Windows"
+		"macOS":
+			return "macOS"
+		"Linux", "X11", "FreeBSD", "OpenBSD", "NetBSD":
+			return "Linux / Unix-like (including Raspberry Pi)"
+		"Android":
+			return "Android"
+		"iOS":
+			return "iOS"
+		"Web":
+			return "Web"
+		_:
+			return "Unknown (" + name + ")"
+	return "Unknown (" + name + ")"
+
+static func to_platform_path(path: String) -> String:
+	if path.is_empty():
+		return ""    
+	path = path.replace("\\", "/").simplify_path()
+	var os_name = OS.get_name()    
+	if os_name == "Windows":
+		path = path.replace("/", "\\")
+	
+	return path
+
+static func is_platform_windows() -> bool:
+	return OS.get_name() == "Windows"
+
 static func size_of_file_in_bytes(file_path_absolute: String) -> int:
 	if FileAccess.file_exists(file_path_absolute):
 		var file = FileAccess.open(file_path_absolute, FileAccess.READ)
@@ -37,6 +69,96 @@ static func get_all_files_recursive_in_folder(folder_path_absolute: String) -> A
 						result += get_all_files_recursive_in_folder(item_path)
 				file_name = dir.get_next()
 	return result
+## Returns absolute paths of all files with the exact name (recursive).
+static func get_all_files_of_exact_name_recursive_in_folder(
+	folder_path_absolute: String,
+	file_name_to_find: String,
+	ignore_case: bool = true,
+	include_hidden: bool = true
+) -> Array[String]:
+
+	var result: Array[String] = []
+
+	var dir := DirAccess.open(folder_path_absolute)
+	if not dir:
+		push_warning("Could not open directory: " + folder_path_absolute)
+		return result
+
+	dir.include_hidden = include_hidden
+	# include_navigational is false by default → skips . and ..
+
+	dir.list_dir_begin()
+	var item_name := dir.get_next()
+
+	while item_name != "":
+		var item_path := folder_path_absolute.path_join(item_name)
+
+		if dir.current_is_dir():
+			# Recurse into subdirectories (including hidden ones if enabled)
+			result.append_array(
+				get_all_files_of_exact_name_recursive_in_folder(
+					item_path, file_name_to_find, ignore_case, include_hidden
+				)
+			)
+		else:
+			# It's a file → check name
+			var match_found := false
+			if ignore_case:
+				match_found = item_name.to_lower() == file_name_to_find.to_lower()
+			else:
+				match_found = item_name == file_name_to_find
+
+			if match_found:
+				result.append(item_path)
+
+		item_name = dir.get_next()
+
+	return result
+
+
+## Returns absolute paths of all folders with the exact name (recursive).
+static func get_all_folders_of_exact_name_recursive_in_folder(
+	folder_path_absolute: String,
+	folder_name_to_find: String,
+	ignore_case: bool = true,
+	include_hidden: bool = true
+) -> Array[String]:
+
+	var result: Array[String] = []
+
+	var dir := DirAccess.open(folder_path_absolute)
+	if not dir:
+		push_warning("Could not open directory: " + folder_path_absolute)
+		return result
+
+	dir.include_hidden = include_hidden
+
+	dir.list_dir_begin()
+	var item_name := dir.get_next()
+
+	while item_name != "":
+		if dir.current_is_dir():
+			var item_path := folder_path_absolute.path_join(item_name)
+
+			var match_found := false
+			if ignore_case:
+				match_found = item_name.to_lower() == folder_name_to_find.to_lower()
+			else:
+				match_found = item_name == folder_name_to_find
+
+			if match_found:
+				result.append(item_path)
+
+			# Always recurse (even if we found a match, we want deeper ones too)
+			result.append_array(
+				get_all_folders_of_exact_name_recursive_in_folder(
+					item_path, folder_name_to_find, ignore_case, include_hidden
+				)
+			)
+
+		item_name = dir.get_next()
+
+	return result
 
 static func get_all_files_bigger_that_mega_bytes_recursive(folder_path_absolute: String, mega_bytes: float) -> Array:
 	var result = []
@@ -45,7 +167,7 @@ static func get_all_files_bigger_that_mega_bytes_recursive(folder_path_absolute:
 		if is_file_bigger_that_mega_bytes(file_path, mega_bytes):
 			result.append(file_path)
 	return result
-	
+
 
 static func create_or_override_file_with_content(file_path_absolute: String, content: String) -> void:
 	var file = FileAccess.open(file_path_absolute, FileAccess.WRITE)
