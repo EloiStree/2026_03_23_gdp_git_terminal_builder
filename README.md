@@ -1,5 +1,5 @@
 ```
-git sudmodule add https://github.com/EloiStree/2026_03_23_gdp_git_terminal_builder.git addons/2026_03_23_gdp_git_terminal_builder
+git submodule add https://github.com/EloiStree/2026_03_23_gdp_git_terminal_builder.git addons/2026_03_23_gdp_git_terminal_builder
 ```
 
 # 2026_03_23_gdp_git_terminal_builder
